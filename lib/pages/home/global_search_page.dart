@@ -2,9 +2,7 @@ import 'package:flutter/material.dart';
 import '../../services/streaming_service.dart';
 
 class GlobalSearchPage extends StatefulWidget {
-  final String accessToken;
-
-  const GlobalSearchPage({super.key, required this.accessToken});
+  const GlobalSearchPage({super.key});
 
   @override
   State<GlobalSearchPage> createState() => _GlobalSearchPageState();
@@ -21,7 +19,7 @@ class _GlobalSearchPageState extends State<GlobalSearchPage> {
   @override
   void initState() {
     super.initState();
-    _streamingService = StreamingService(accessToken: widget.accessToken);
+    _streamingService = StreamingService();
   }
 
   Future<void> _performSearch() async {

@@ -6,24 +6,22 @@ import '../../services/streaming_service.dart';
 import '../../widgets/live_action.dart';
 import '../../widgets/tiktok_comments.dart';
 import 'package:share_plus/share_plus.dart';
+import '../home/widgets/gift_sheet.dart';
 
 class ViewerPage extends StatefulWidget {
   final String streamId;
-  final String accessToken;
   final String title;
   final String feedType; // live | grace
 
   const ViewerPage({
     super.key,
     required this.streamId,
-    required this.accessToken,
     required this.title,
     required this.feedType,
   });
 
   @override
   State<ViewerPage> createState() => _ViewerPageState();
-
 }
 
 class _ViewerPageState extends State<ViewerPage>
@@ -50,7 +48,7 @@ class _ViewerPageState extends State<ViewerPage>
     WidgetsBinding.instance.addObserver(this);
 
     _streamingService =
-        StreamingService(accessToken: widget.accessToken);
+        StreamingService();
 
     // ONLY join if this is a live stream
     if (widget.feedType == "live") {
@@ -194,9 +192,9 @@ class _ViewerPageState extends State<ViewerPage>
 
   void _requestCoHost() async {
     try {
-      await _streamingService.requestCoHost(streamId: widget.streamId);
+      // await _streamingService.requestCoHost(streamId: widget.streamId);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Co-Host request sent! 🎥")),
+        const SnackBar(content: Text("Co-Host feature coming soon! 🎥")),
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -227,10 +225,12 @@ class _ViewerPageState extends State<ViewerPage>
 
     _commentController.dispose();
 
-    try {
-      _engine?.leaveChannel();
-      _engine?.release();
-    } catch (_) {}
+    if (_engineReady) {
+      try {
+        _engine.leaveChannel();
+        _engine.release();
+      } catch (_) {}
+    }
 
     super.dispose();
   }
@@ -260,63 +260,87 @@ class _ViewerPageState extends State<ViewerPage>
           Positioned(
             top: MediaQuery.of(context).padding.top + 12,
             left: 15,
+            right: 15,
             child: Row(
               children: [
-                const CircleAvatar(radius: 18),
-                const SizedBox(width: 8),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      widget.title,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
+                Container(
+                  padding: const EdgeInsets.all(2),
+                  decoration: BoxDecoration(
+                    color: Colors.black38,
+                    borderRadius: BorderRadius.circular(25),
+                  ),
+                  child: Row(
+                    children: [
+                      const CircleAvatar(radius: 18),
+                      const SizedBox(width: 8),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            widget.title,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Text(
+                            "1.2k viewers",
+                            style: TextStyle(
+                              color: Colors.white.withOpacity(0.7),
+                              fontSize: 10,
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
-                    Text(
-                      isGrace ? "Ended" : "Live",
-                      style: TextStyle(
-                        color: isGrace
-                            ? Colors.grey
-                            : Colors.redAccent,
-                        fontSize: 12,
+                      const SizedBox(width: 12),
+                      GestureDetector(
+                        onTap: () {},
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFFF0050),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: const Text(
+                            "Follow",
+                            style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                          ),
+                        ),
                       ),
-                    ),
-                  ],
+                      const SizedBox(width: 4),
+                    ],
+                  ),
+                ),
+                const Spacer(),
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: const BoxDecoration(color: Colors.black38, shape: BoxShape.circle),
+                  child: const Icon(Icons.close, color: Colors.white, size: 20),
                 ),
               ],
             ),
           ),
 
-          /// 🎯 ACTIONS (disabled for grace)
+          /// 🎯 ACTIONS (using integrated bar)
           if (!isGrace)
             Positioned(
-              right: 10,
-              bottom: 160,
+              right: 12,
+              bottom: 120,
               child: Column(
                 children: [
-                  const LiveAction(icon: Icons.attach_money, label: "Sub"),
-                  const SizedBox(height: 12),
-                  LiveAction(
-                    icon: Icons.card_giftcard, 
-                    label: "Gift",
-                    onTap: _sendGift,
-                  ),
-                  const SizedBox(height: 12),
-                  LiveAction(
-                    icon: Icons.video_call, 
-                    label: "Join",
-                    onTap: _requestCoHost,
-                  ),
-                  const SizedBox(height: 12),
-                  LiveAction(
-                    icon: Icons.share, 
-                    label: "Share",
-                    onTap: () {
-                      Share.share('https://livkit.onrender.com/live/${widget.streamId}');
-                    }
-                  ),
+                  _actionIcon(Icons.add_moderator, "Sub"),
+                  const SizedBox(height: 16),
+                  _actionIcon(Icons.card_giftcard, "Gift", onTap: () {
+                    GiftSheet.show(context);
+                  }),
+                  const SizedBox(height: 16),
+                  _actionIcon(Icons.video_call, "Join"),
+                  const SizedBox(height: 16),
+                  _actionIcon(Icons.share, "Share", onTap: () {
+                    Share.share('https://livkit.onrender.com/live/${widget.streamId}');
+                  }),
                 ],
               ),
             ),
@@ -324,44 +348,70 @@ class _ViewerPageState extends State<ViewerPage>
           /// 💬 COMMENTS
           TikTokComments(controller: commentsController),
 
-          /// ✍️ COMMENT INPUT (only for live)
+          /// ✍️ COMMENT INPUT
           if (!isGrace)
             Positioned(
-              bottom: 40,
-              left: 10,
-              right: 10,
-              child: Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _commentController,
-                      style: const TextStyle(color: Colors.white),
-                      onSubmitted: (_) => _sendComment(),
-                      decoration: InputDecoration(
-                        hintText: "Add a comment...",
-                        hintStyle: const TextStyle(
-                            color: Colors.white54),
-                        filled: true,
-                        fillColor: Colors.white12,
-                        contentPadding:
-                            const EdgeInsets.symmetric(
-                                horizontal: 18, vertical: 12),
-                        border: OutlineInputBorder(
-                          borderRadius:
-                              BorderRadius.circular(25),
-                          borderSide: BorderSide.none,
+              bottom: MediaQuery.of(context).padding.bottom + 10,
+              left: 0,
+              right: 0,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        decoration: BoxDecoration(
+                          color: Colors.black45,
+                          borderRadius: BorderRadius.circular(25),
+                          border: Border.all(color: Colors.white10),
+                        ),
+                        child: TextField(
+                          controller: _commentController,
+                          style: const TextStyle(color: Colors.white, fontSize: 14),
+                          onSubmitted: (_) => _sendComment(),
+                          decoration: const InputDecoration(
+                            hintText: "Say something...",
+                            hintStyle: TextStyle(color: Colors.white54),
+                            border: InputBorder.none,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.send,
-                        color: Colors.white),
-                    onPressed: _sendComment,
-                  ),
-                ],
+                    const SizedBox(width: 8),
+                    const Icon(Icons.emoji_emotions_outlined, color: Colors.white, size: 28),
+                    const SizedBox(width: 12),
+                    GestureDetector(
+                      onTap: _sendComment,
+                      child: const Icon(Icons.send_rounded, color: Color(0xFFFF0050), size: 28),
+                    ),
+                  ],
+                ),
               ),
             ),
+        ],
+      ),
+    );
+  }
+
+  Widget _actionIcon(IconData icon, String label, {VoidCallback? onTap}) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: const BoxDecoration(
+              color: Colors.black38,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: Colors.white, size: 26),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+          ),
         ],
       ),
     );

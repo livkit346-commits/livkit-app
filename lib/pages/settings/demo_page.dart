@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import '../auth/login_page.dart';
+import '../../navigation/main_navigation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class DemoPage extends StatefulWidget {
@@ -54,24 +55,6 @@ class _DemoPageState extends State<DemoPage> {
     );
   }
 
-  void _showPaidOnlyDialog() {
-    showDialog(
-      context: context,
-      barrierDismissible: true,
-      builder: (_) => AlertDialog(
-        title: const Text("Access Restricted"),
-        content: const Text(
-          "LivKit is for premium users only.\n\nPlease complete payment to unlock full access.",
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text("Close"),
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildPanel({
     required Color color,
@@ -204,7 +187,7 @@ class _DemoPageState extends State<DemoPage> {
                 title: "Join Now",
                 subtitle: "Upgrade to unlock LivKit",
                 child: ElevatedButton(
-                  onPressed: _showPaidOnlyDialog,
+                  onPressed: () => Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const MainNavigation())),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.blueAccent,
                     padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
