@@ -292,93 +292,64 @@ class _ChatPageState extends State<ChatPage> {
 
   @override
   Widget build(BuildContext context) {
-    const bg = Color(0xFF000000);
+    const bg = Color(0xFF1E1E1E);
 
     return Scaffold(
       backgroundColor: bg,
       appBar: AppBar(
         backgroundColor: bg,
         elevation: 0,
-        centerTitle: false,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 20),
-          onPressed: () => Navigator.pop(context),
-        ),
+        leading: const BackButton(color: Colors.white),
         title: Row(
           children: [
             _buildAvatar(widget.title, radius: 18),
-            const SizedBox(width: 12),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  widget.title,
-                  style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
-                ),
-                if (_typingUsers.isNotEmpty)
-                  Text(
-                    "typing...",
-                    style: TextStyle(color: const Color(0xFFFF0050).withOpacity(0.8), fontSize: 11),
-                  )
-                else
-                  const Text(
-                    "Online",
-                    style: TextStyle(color: Colors.white54, fontSize: 11),
-                  ),
-              ],
+
+            const SizedBox(width: 10),
+            Text(
+              widget.title,
+              style: const TextStyle(color: Colors.white),
             ),
           ],
-        ),
-        actions: [
-          IconButton(icon: const Icon(Icons.videocam_outlined, color: Colors.white), onPressed: () {}),
-          IconButton(icon: const Icon(Icons.info_outline, color: Colors.white), onPressed: () {}),
-        ],
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(1),
-          child: Container(color: Colors.white.withOpacity(0.05), height: 1),
         ),
       ),
       body: Column(
         children: [
+          if (_typingUsers.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.all(8),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  "${_typingUsers.join(', ')} typing…",
+                  style: const TextStyle(color: Colors.white54, fontSize: 12),
+                ),
+              ),
+            ),
           Expanded(
             child: ListView.builder(
               controller: _scrollController,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+              padding: const EdgeInsets.all(12),
               itemCount: _messages.length,
               itemBuilder: (_, i) {
                 final msg = _messages[i];
                 final isMe = msg["is_me"] == true;
 
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: Align(
-                    alignment:
-                        isMe ? Alignment.centerRight : Alignment.centerLeft,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                      constraints: BoxConstraints(
-                        maxWidth: MediaQuery.of(context).size.width * 0.75,
-                      ),
-                      decoration: BoxDecoration(
-                        color: isMe ? const Color(0xFFFF0050) : const Color(0xFF1A1A1A),
-                        borderRadius: BorderRadius.only(
-                          topLeft: const Radius.circular(20),
-                          topRight: const Radius.circular(20),
-                          bottomLeft: Radius.circular(isMe ? 20 : 4),
-                          bottomRight: Radius.circular(isMe ? 4 : 20),
-                        ),
-                        boxShadow: isMe ? [
-                          BoxShadow(
-                            color: const Color(0xFFFF0050).withOpacity(0.2),
-                            blurRadius: 8,
-                            offset: const Offset(0, 2),
-                          )
-                        ] : null,
-                      ),
-                      child: Text(
-                        msg["content"]?["text"] ?? "",
-                        style: const TextStyle(color: Colors.white, fontSize: 15, height: 1.3),
-                      ),
+                return Align(
+                  alignment:
+                      isMe ? Alignment.centerRight : Alignment.centerLeft,
+                  child: Container(
+                    margin: const EdgeInsets.symmetric(vertical: 4),
+                    padding: const EdgeInsets.all(12),
+                    constraints: BoxConstraints(
+                      maxWidth: MediaQuery.of(context).size.width * 0.7,
+                    ),
+                    decoration: BoxDecoration(
+                      color: isMe ? Colors.blueAccent : Colors.grey[800],
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Text(
+                      msg["content"]?["text"] ?? "",
+                      style: const TextStyle(color: Colors.white),
                     ),
                   ),
                 );
@@ -393,18 +364,12 @@ class _ChatPageState extends State<ChatPage> {
 
   Widget _buildAvatar(String username, {double radius = 18}) {
     final color = Colors.primaries[username.hashCode % Colors.primaries.length];
-    return Container(
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        border: Border.all(color: Colors.white10, width: 1.5),
-      ),
-      child: CircleAvatar(
-        radius: radius,
-        backgroundColor: color.withOpacity(0.8),
-        child: Text(
-          username.isNotEmpty ? username[0].toUpperCase() : "?",
-          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-        ),
+    return CircleAvatar(
+      radius: radius,
+      backgroundColor: color,
+      child: Text(
+        username.isNotEmpty ? username[0].toUpperCase() : "?",
+        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
       ),
     );
   }
@@ -412,43 +377,25 @@ class _ChatPageState extends State<ChatPage> {
 
   Widget _buildInputBar(Color bg) {
     return Container(
-      padding: EdgeInsets.fromLTRB(12, 8, 12, MediaQuery.of(context).padding.bottom + 12),
-      decoration: BoxDecoration(
-        color: bg,
-        border: Border(top: BorderSide(color: Colors.white.withOpacity(0.05))),
-      ),
+      color: bg,
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
       child: Row(
         children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: const BoxDecoration(color: Color(0xFF1A1A1A), shape: BoxShape.circle),
-            child: const Icon(Icons.add, color: Colors.white, size: 22),
-          ),
-          const SizedBox(width: 12),
           Expanded(
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              decoration: BoxDecoration(
-                color: const Color(0xFF1A1A1A),
-                borderRadius: BorderRadius.circular(24),
-                border: Border.all(color: Colors.white.withOpacity(0.05)),
-              ),
-              child: TextField(
-                controller: _inputController,
-                style: const TextStyle(color: Colors.white, fontSize: 15),
-                onChanged: _handleTyping,
-                onSubmitted: (_) => _sendMessage(),
-                decoration: const InputDecoration(
-                  hintText: "Message...",
-                  hintStyle: TextStyle(color: Colors.white38),
-                  border: InputBorder.none,
-                ),
+            child: TextField(
+              controller: _inputController,
+              style: const TextStyle(color: Colors.white),
+              onChanged: _handleTyping,
+              onSubmitted: (_) => _sendMessage(),
+              decoration: const InputDecoration(
+                hintText: "Type a message",
+                hintStyle: TextStyle(color: Colors.white54),
+                border: InputBorder.none,
               ),
             ),
           ),
-          const SizedBox(width: 8),
           IconButton(
-            icon: const Icon(Icons.send_rounded, color: Color(0xFFFF0050), size: 28),
+            icon: const Icon(Icons.send, color: Colors.blueAccent),
             onPressed: _sendMessage,
           ),
         ],

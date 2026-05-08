@@ -338,27 +338,20 @@ class _ChatPageListState extends State<ChatPageList>
         padding: const EdgeInsets.only(right: 12),
         child: Column(
           children: [
-            Container(
-              padding: const EdgeInsets.all(2),
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: isAdd ? const LinearGradient(colors: [Color(0xFFFF0050), Color(0xFFD40042)]) : null,
-              ),
-              child: CircleAvatar(
-                radius: 28,
-                backgroundColor: isAdd ? Colors.black : Colors.white12,
-                child: isAdd
-                    ? const Icon(Icons.add, color: Colors.white, size: 28)
-                    : CircleAvatar(
-                        radius: 25,
-                        backgroundImage: NetworkImage(avatar),
-                      ),
-              ),
+            CircleAvatar(
+              radius: 28,
+              backgroundColor: isAdd ? Colors.blue : Colors.white24,
+              child: isAdd
+                  ? const Icon(Icons.person_add, color: Colors.white)
+                  : CircleAvatar(
+                      radius: 25,
+                      backgroundImage: NetworkImage(avatar),
+                    ),
             ),
             const SizedBox(height: 5),
             Text(
               name,
-              style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w500),
+              style: const TextStyle(color: Colors.white, fontSize: 12),
             ),
           ],
         ),
@@ -368,19 +361,12 @@ class _ChatPageListState extends State<ChatPageList>
 
   Widget _buildAvatar(String username) {
     final color = Colors.primaries[username.hashCode % Colors.primaries.length];
-    return Container(
-      padding: const EdgeInsets.all(1.5),
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        border: Border.all(color: Colors.white10),
-      ),
-      child: CircleAvatar(
-        radius: 24,
-        backgroundColor: color.withOpacity(0.8),
-        child: Text(
-          username.substring(0, 1).toUpperCase(),
-          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-        ),
+    return CircleAvatar(
+      radius: 24,
+      backgroundColor: color,
+      child: Text(
+        username.substring(0, 1).toUpperCase(),
+        style: const TextStyle(color: Colors.white),
       ),
     );
   }
@@ -396,49 +382,39 @@ class _ChatPageListState extends State<ChatPageList>
         );
       },
       child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        padding: const EdgeInsets.all(16),
+        margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: const Color(0xFF1A1A1A),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.white.withOpacity(0.05)),
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFFFF0050).withOpacity(0.05),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            )
-          ],
+          color: Colors.white10,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.white12),
         ),
         child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: const Color(0xFFFF0050).withOpacity(0.1),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(Icons.people_outline, color: Color(0xFFFF0050), size: 24),
+          children: const [
+            CircleAvatar(
+              radius: 24,
+              backgroundColor: Colors.orange,
+              child: Icon(Icons.person_outline, color: Colors.white),
             ),
-            const SizedBox(width: 16),
-            const Expanded(
+            SizedBox(width: 12),
+            Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    "Friend Requests",
+                    "Pending Friend Requests",
                     style: TextStyle(
-                        color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15),
+                        color: Colors.white, fontWeight: FontWeight.bold),
                   ),
                   SizedBox(height: 4),
                   Text(
-                    "You have pending requests",
-                    style: TextStyle(color: Colors.white54, fontSize: 13),
+                    "Tap to view and respond to requests",
+                    style: TextStyle(color: Colors.white70, fontSize: 13),
                   ),
                 ],
               ),
             ),
-            const Icon(Icons.arrow_forward_ios, color: Colors.white24, size: 14),
+            Icon(Icons.arrow_forward_ios, color: Colors.white38, size: 16),
           ],
         ),
       ),

@@ -99,7 +99,7 @@ class _SelfProfileScreenState extends State<SelfProfileScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: AppColors.background,
       body: SafeArea(
         child: _loading
           ? const Center(child: CircularProgressIndicator())
@@ -128,14 +128,13 @@ class _SelfProfileScreenState extends State<SelfProfileScreen>
                                 style: const TextStyle(
                                   color: Colors.white,
                                   fontSize: 18,
-                                  fontWeight: FontWeight.bold,
+                                  fontWeight: FontWeight.w600,
                                 ),
                               ),
-                              const SizedBox(width: 4),
-                              const Icon(Icons.verified, color: Colors.blue, size: 18),
+
                               const Spacer(),
                               IconButton(
-                                icon: const Icon(Icons.account_balance_wallet, color: Color(0xFFFFD700)),
+                                icon: const Icon(Icons.account_balance_wallet, color: Colors.amber),
                                 onPressed: () {
                                   Navigator.push(
                                     context,
@@ -152,31 +151,24 @@ class _SelfProfileScreenState extends State<SelfProfileScreen>
                                   );
                                 },
                               ),
+
                             ],
                           ),
                         ),
 
                         const SizedBox(height: 10),
 
-                        Container(
-                          padding: const EdgeInsets.all(3),
-                          decoration: const BoxDecoration(
-                            shape: BoxShape.circle,
-                            gradient: LinearGradient(
-                              colors: [Color(0xFFFF0050), Color(0xFFD40042)],
-                            ),
-                          ),
-                          child: CircleAvatar(
-                            radius: 42,
-                            backgroundColor: Colors.black,
-                            backgroundImage: _avatarUrl != null
-                                ? NetworkImage(_avatarUrl!)
-                                : null,
-                            child: _avatarUrl == null
-                                ? const Icon(Icons.person, color: Colors.white, size: 40)
-                                : null,
-                          ),
+                        CircleAvatar(
+                          radius: 42,
+                          backgroundColor: Colors.white12,
+                          backgroundImage: _avatarUrl != null
+                              ? NetworkImage(_avatarUrl!)
+                              : null,
+                          child: _avatarUrl == null
+                              ? const Icon(Icons.person, color: Colors.white, size: 40)
+                              : null,
                         ),
+
 
                         const SizedBox(height: 10),
 
@@ -184,8 +176,8 @@ class _SelfProfileScreenState extends State<SelfProfileScreen>
                           _displayName,
                           style: const TextStyle(
                             color: Colors.white,
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
 
@@ -199,7 +191,8 @@ class _SelfProfileScreenState extends State<SelfProfileScreen>
                           ),
                         ),
 
-                        const SizedBox(height: 20),
+
+                        const SizedBox(height: 16),
 
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -212,39 +205,14 @@ class _SelfProfileScreenState extends State<SelfProfileScreen>
                           ],
                         ),
 
-                        const SizedBox(height: 20),
 
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 20),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: ElevatedButton(
-                                  onPressed: () {},
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: const Color(0xFFFF0050),
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                                  ),
-                                  child: const Text("Edit Profile", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
-                                ),
-                              ),
-                              const SizedBox(width: 10),
-                              Container(
-                                padding: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                  color: Colors.white10,
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: const Icon(Icons.share, color: Colors.white, size: 20),
-                              ),
-                            ],
-                          ),
-                        ),
-
-                        const SizedBox(height: 20),
+                        const SizedBox(height: 16),
                       ],
+
+                      
                     ),
                   ),
+
 
                   SliverToBoxAdapter(
                     child: _bio.isNotEmpty
@@ -260,12 +228,15 @@ class _SelfProfileScreenState extends State<SelfProfileScreen>
                                     fontSize: 14,
                                   ),
                                 ),
-                                const SizedBox(height: 20),
+                                const SizedBox(height: 16),
                               ],
                             ),
                           )
                         : const SizedBox.shrink(),
                   ),
+
+                  
+
 
                   // 📑 STICKY TAB BAR
                   SliverPersistentHeader(
@@ -273,14 +244,14 @@ class _SelfProfileScreenState extends State<SelfProfileScreen>
                     delegate: _TabBarDelegate(
                       TabBar(
                         controller: _tabController,
-                        indicatorColor: const Color(0xFFFF0050),
-                        indicatorWeight: 3,
+                        indicatorColor: Colors.white,
+                        indicatorWeight: 2,
                         labelColor: Colors.white,
                         unselectedLabelColor: Colors.white38,
                         tabs: const [
                           Tab(icon: Icon(Icons.grid_on)),
                           Tab(icon: Icon(Icons.video_collection_outlined)),
-                          Tab(icon: Icon(Icons.favorite_border)),
+                          Tab(icon: Icon(Icons.person_pin_outlined)),
                         ],
                       ),
                     ),

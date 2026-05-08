@@ -1,8 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:agora_rtc_engine/agora_rtc_engine.dart';
-import 'package:permission_handler/permission_handler.dart';
 import '../../services/streaming_service.dart';
-import '../../config/agora_config.dart';
 import 'streamer_page.dart';
 
 class GoLivePage extends StatefulWidget {
@@ -15,43 +12,8 @@ class GoLivePage extends StatefulWidget {
 class _GoLivePageState extends State<GoLivePage> {
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  
-  RtcEngine? _engine;
   bool _isLoading = false;
   bool _isPrivate = false;
-  bool _previewReady = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _initPreview();
-  }
-
-  Future<void> _initPreview() async {
-    final statuses = await [
-      Permission.camera,
-      Permission.microphone,
-    ].request();
-
-    if (statuses[Permission.camera]!.isGranted && statuses[Permission.microphone]!.isGranted) {
-      _engine = createAgoraRtcEngine();
-      await _engine!.initialize(
-        const RtcEngineContext(
-          appId: AgoraConfig.appId,
-          channelProfile: ChannelProfileType.channelProfileLiveBroadcasting,
-        ),
-      );
-
-      await _engine!.enableVideo();
-      await _engine!.startPreview();
-      
-      if (mounted) {
-        setState(() {
-          _previewReady = true;
-        });
-      }
-    }
-  }
 
   Future<void> _startLive() async {
     if (_isLoading) return;
@@ -70,14 +32,7 @@ class _GoLivePageState extends State<GoLivePage> {
       );
 
       final stream = response["stream"];
-
-      if (_engine != null) {
-        await _engine!.stopPreview();
-        await _engine!.release();
-        _engine = null;
-      }
-
-      if (!mounted) return;
+      final String shareLink = stream["share_link"] ?? "";
 
       Navigator.pushReplacement(
         context,
@@ -95,13 +50,13 @@ class _GoLivePageState extends State<GoLivePage> {
 
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("Failed to start live: $e"),
+        const SnackBar(
+          content: Text("Failed to start live stream"),
           backgroundColor: Colors.red,
         ),
       );
     } finally {
-      if (mounted) setState(() => _isLoading = false);
+      setState(() => _isLoading = false);
     }
   }
 
@@ -109,202 +64,199 @@ class _GoLivePageState extends State<GoLivePage> {
   void dispose() {
     _titleController.dispose();
     _passwordController.dispose();
-    _engine?.stopPreview();
-    _engine?.release();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
-      body: Stack(
-        children: [
-          // 🎥 FULLSCREEN CAMERA PREVIEW
-          if (_previewReady && _engine != null)
-            SizedBox.expand(
-              child: AgoraVideoView(
-                controller: VideoViewController(
-                  rtcEngine: _engine!,
-                  canvas: const VideoCanvas(uid: 0),
-                ),
-              ),
-            )
-          else
-            const SizedBox.expand(child: Center(child: CircularProgressIndicator(color: Color(0xFFFF0050)))),
-
-          // 🌑 DARK OVERLAY
-          Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Colors.black.withOpacity(0.4),
-                  Colors.transparent,
-                  Colors.black.withOpacity(0.8),
+      backgroundColor: AppColors.background,
+      body: SafeArea(
+        child: Column(
+          children: [
+            // ───────── TOP BAR ─────────
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              child: Row(
+                children: [
+                  GestureDetector(
+                    onTap: () => Navigator.pop(context),
+                    child: const Icon(Icons.close, color: Colors.white),
+                  ),
+                  const Spacer(),
+                  const Text(
+                    "Go Live",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const Spacer(),
                 ],
               ),
             ),
-          ),
 
-          SafeArea(
-            child: Column(
+            const SizedBox(height: 10),
+
+            // ───────── CAMERA PREVIEW PLACEHOLDER ─────────
+            Container(
+              margin: const EdgeInsets.symmetric(horizontal: 16),
+              height: MediaQuery.of(context).size.height * 0.42,
+              decoration: BoxDecoration(
+                color: Colors.white10,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: const Center(
+                child: Icon(
+                  Icons.videocam,
+                  color: Colors.white54,
+                  size: 60,
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 20),
+
+            // ───────── TITLE INPUT ─────────
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: TextField(
+                controller: _titleController,
+                style: const TextStyle(color: Colors.white),
+                maxLength: 80,
+                decoration: InputDecoration(
+                  counterText: "",
+                  hintText: "Add a title for your live",
+                  hintStyle: const TextStyle(color: Colors.white54),
+                  filled: true,
+                  fillColor: Colors.white12,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 15),
+
+            // ───────── OPTIONS ─────────
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                // ───────── TOP BAR ─────────
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                  child: Row(
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.close, color: Colors.white, size: 28),
-                        onPressed: () => Navigator.pop(context),
-                      ),
-                      const Spacer(),
-                      const Text(
-                        "GO LIVE",
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: 2,
-                        ),
-                      ),
-                      const Spacer(),
-                      IconButton(
-                        icon: const Icon(Icons.switch_camera_rounded, color: Colors.white, size: 28),
-                        onPressed: () => _engine?.switchCamera(),
-                      ),
-                    ],
+                GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      _isPrivate = !_isPrivate;
+                    });
+                  },
+                  child: _Option(
+                    icon: _isPrivate ? Icons.lock : Icons.public,
+                    label: _isPrivate ? "Private" : "Public",
+                    color: _isPrivate ? Colors.redAccent : Colors.greenAccent,
                   ),
                 ),
-
-                const Spacer(),
-
-                // ───────── TITLE INPUT ─────────
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.black45,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: Colors.white10),
-                    ),
-                    child: TextField(
-                      controller: _titleController,
-                      style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
-                      maxLength: 80,
-                      textAlign: TextAlign.center,
-                      decoration: const InputDecoration(
-                        counterText: "",
-                        hintText: "What are you doing today?",
-                        hintStyle: TextStyle(color: Colors.white38),
-                        border: InputBorder.none,
-                        contentPadding: EdgeInsets.symmetric(vertical: 20),
-                      ),
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 24),
-
-                // ───────── OPTIONS ─────────
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      _Option(
-                        onTap: () => setState(() => _isPrivate = !_isPrivate),
-                        icon: _isPrivate ? Icons.lock_rounded : Icons.public_rounded,
-                        label: _isPrivate ? "Private" : "Public",
-                        color: _isPrivate ? const Color(0xFFFF0050) : Colors.white,
-                      ),
-                      const _Option(icon: Icons.auto_awesome, label: "Beauty"),
-                      const _Option(icon: Icons.share_rounded, label: "Share"),
-                      const _Option(icon: Icons.settings_rounded, label: "Settings"),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(height: 40),
-
-                // ───────── GO LIVE BUTTON ─────────
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 40),
-                  child: GestureDetector(
-                    onTap: _isLoading ? null : _startLive,
-                    child: Container(
-                      width: 240,
-                      height: 56,
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [Color(0xFFFF0050), Color(0xFFD40042)],
-                        ),
-                        borderRadius: BorderRadius.circular(28),
-                        boxShadow: [
-                          BoxShadow(
-                            color: const Color(0xFFFF0050).withOpacity(0.4),
-                            blurRadius: 20,
-                            offset: const Offset(0, 8),
-                          ),
-                        ],
-                      ),
-                      child: Center(
-                        child: _isLoading
-                            ? const SizedBox(
-                                height: 24,
-                                width: 24,
-                                child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
-                              )
-                            : const Text(
-                                "GO LIVE",
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                  letterSpacing: 2,
-                                ),
-                              ),
-                      ),
-                    ),
-                  ),
-                ),
+                _Option(icon: Icons.chat_bubble_outline, label: "Chat"),
+                _Option(icon: Icons.card_giftcard, label: "Gifts"),
+                _Option(icon: Icons.mic_none, label: "Mic"),
               ],
             ),
-          ),
-        ],
+
+            if (_isPrivate) ...[
+              const SizedBox(height: 15),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: TextField(
+                  controller: _passwordController,
+                  style: const TextStyle(color: Colors.white),
+                  obscureText: true,
+                  decoration: InputDecoration(
+                    hintText: "Set a password for your private live",
+                    hintStyle: const TextStyle(color: Colors.white54),
+                    filled: true,
+                    fillColor: Colors.white12,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(14),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+
+            const Spacer(),
+
+            // ───────── GO LIVE BUTTON ─────────
+            Padding(
+              padding: const EdgeInsets.only(bottom: 30),
+              child: GestureDetector(
+                onTap: _isLoading ? null : _startLive,
+                child: Container(
+                  width: 240,
+                  height: 52,
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [AppColors.primary, AppColors.secondary],
+                    ),
+                    borderRadius: BorderRadius.circular(26),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.primary.withOpacity(0.4),
+                        blurRadius: 15,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
+                  ),
+                  child: Center(
+                    child: _isLoading
+                        ? const CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          )
+                        : const Text(
+                            "GO LIVE",
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 1.2,
+                            ),
+                          ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 }
 
+// ───────── OPTION WIDGET ─────────
 class _Option extends StatelessWidget {
   final IconData icon;
   final String label;
   final Color? color;
-  final VoidCallback? onTap;
 
-  const _Option({required this.icon, required this.label, this.color, this.onTap});
+  const _Option({required this.icon, required this.label, this.color});
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: const BoxDecoration(color: Colors.black26, shape: BoxShape.circle),
-            child: Icon(icon, color: color ?? Colors.white, size: 24),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            label,
-            style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
-          ),
-        ],
-      ),
+    return Column(
+      children: [
+        CircleAvatar(
+          radius: 26,
+          backgroundColor: Colors.white12,
+          child: Icon(icon, color: color ?? Colors.white),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          label,
+          style: const TextStyle(color: Colors.white70, fontSize: 12),
+        ),
+      ],
     );
   }
 }

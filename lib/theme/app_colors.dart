@@ -1,18 +1,18 @@
 import 'package:flutter/material.dart';
 
 class AppColors {
-  // 🌘 Backgrounds - Pitch Black Aesthetic
+  // 🌘 Backgrounds - From sign-in.html gradient
   static const List<Color> bgGradient = [
-    Color(0xFF000000),
-    Color(0xFF121212),
+    Color(0xFF0F2027),
+    Color(0xFF203A43),
+    Color(0xFF2C5364),
   ];
   
-  static const Color background = Color(0xFF000000);
+  static const Color background = Color(0xFF0F2027);
 
-  // 🎨 Accents - LivKit Premium Red
-  static const Color primary = Color(0xFFFF0050); 
-  static const Color secondary = Color(0xFFD40042);
-  static const Color accent = Color(0xFFD40042);
+  // 🎨 Accents - From sign-in.html and admin portal
+  static const Color primary = Color(0xFF7C4DFF); // Purple
+  static const Color secondary = Color(0xFF4568DC); // Blue
   static const Color surface = Color(0xFF1A1A1A);
   
   // ⚪ Text
