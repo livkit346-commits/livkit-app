@@ -69,37 +69,19 @@ class _AnimatedLoginPageState extends State<AnimatedLoginPage>
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    // 🔴 LOGO / BRAND
-                    Container(
-                      width: 80,
-                      height: 80,
-                      decoration: const BoxDecoration(
-                        color: AppColors.primary,
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: Color(0x66FF0050),
-                            blurRadius: 20,
-                            spreadRadius: 2,
-                          )
-                        ],
-                      ),
-                      child: const Icon(Icons.play_arrow_rounded, color: Colors.white, size: 50),
-                    ),
-                    const SizedBox(height: 24),
+                    // 🔴 LOGO / BRAND (Removed to match web)
                     const Text(
-                      "LIVKIT",
+                      "Welcome Back",
                       style: TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.w900,
+                        fontSize: 32,
+                        fontWeight: FontWeight.w700,
                         color: Colors.white,
-                        letterSpacing: 4,
                       ),
                     ),
                     const SizedBox(height: 8),
                     const Text(
                       "Sign in to continue streaming",
-                      style: TextStyle(color: Colors.white54, fontSize: 14),
+                      style: TextStyle(color: Colors.white70, fontSize: 16),
                     ),
                     const SizedBox(height: 48),
                     
@@ -183,7 +165,7 @@ class _AnimatedLoginPageState extends State<AnimatedLoginPage>
                         ),
                         child: _isLoading 
                           ? const SizedBox(height: 24, width: 24, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                          : const Text("SIGN IN", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, letterSpacing: 1.2)),
+                          : const Text("LOGIN", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, letterSpacing: 1.2)),
                       ),
                     ),
                     

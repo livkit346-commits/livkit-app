@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../theme/app_colors.dart';
 import '../settings/settings.dart';
 import '../../services/auth_service.dart';
 import 'coin_wallet_page.dart';
@@ -72,10 +73,10 @@ class _SelfProfileScreenState extends State<SelfProfileScreen>
         _bio = profile["bio"] ?? "";
         _avatarUrl = profile["avatar"];
 
-        // mock values for now
-        postsCount = 3;
-        followersCount = 88;
-        followingCount = 127;
+        // live values from Django backend
+        postsCount = data["posts_count"] ?? 0;
+        followersCount = data["followers_count"] ?? 0;
+        followingCount = data["following_count"] ?? 0;
 
         _loading = false;
       });
@@ -99,7 +100,7 @@ class _SelfProfileScreenState extends State<SelfProfileScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Colors.black,
       body: SafeArea(
         child: _loading
           ? const Center(child: CircularProgressIndicator())
@@ -117,67 +118,85 @@ class _SelfProfileScreenState extends State<SelfProfileScreen>
                   SliverToBoxAdapter(
                     child: Column(
                       children: [
-                        Padding(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 8),
-                          child: Row(
-                            children: [
-                              const Spacer(),
-                              Text(
-                                _username,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w600,
+                        // Cover Image & Top Actions
+                        Stack(
+                          clipBehavior: Clip.none,
+                          children: [
+                            // Cover Image Background
+                            Container(
+                              height: 140,
+                              width: double.infinity,
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [Colors.grey.shade900, Colors.black],
+                                  begin: Alignment.topCenter,
+                                  end: Alignment.bottomCenter,
                                 ),
                               ),
-
-                              const Spacer(),
-                              IconButton(
-                                icon: const Icon(Icons.account_balance_wallet, color: Colors.amber),
-                                onPressed: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(builder: (context) => const CoinWalletPage()),
-                                  );
-                                },
+                            ),
+                            // Top Actions
+                            Positioned(
+                              top: 8,
+                              left: 12,
+                              right: 12,
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    _username,
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                  Row(
+                                    children: [
+                                      IconButton(
+                                        icon: const Icon(Icons.account_balance_wallet, color: Colors.amber),
+                                        onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CoinWalletPage())),
+                                      ),
+                                      IconButton(
+                                        icon: const Icon(Icons.settings, color: Colors.white),
+                                        onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const Settings())),
+                                      ),
+                                    ],
+                                  ),
+                                ],
                               ),
-                              IconButton(
-                                icon: const Icon(Icons.settings, color: Colors.white),
-                                onPressed: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(builder: (context) => const Settings()),
-                                  );
-                                },
+                            ),
+                            // Overlapping Avatar
+                            Positioned(
+                              bottom: -40,
+                              left: 0,
+                              right: 0,
+                              child: Center(
+                                child: Container(
+                                  padding: const EdgeInsets.all(4),
+                                  decoration: const BoxDecoration(
+                                    color: Colors.black,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: CircleAvatar(
+                                    radius: 46,
+                                    backgroundColor: Colors.white12,
+                                    backgroundImage: _avatarUrl != null ? NetworkImage(_avatarUrl!) : null,
+                                    child: _avatarUrl == null ? const Icon(Icons.person, color: Colors.white, size: 40) : null,
+                                  ),
+                                ),
                               ),
-
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
-
-                        const SizedBox(height: 10),
-
-                        CircleAvatar(
-                          radius: 42,
-                          backgroundColor: Colors.white12,
-                          backgroundImage: _avatarUrl != null
-                              ? NetworkImage(_avatarUrl!)
-                              : null,
-                          child: _avatarUrl == null
-                              ? const Icon(Icons.person, color: Colors.white, size: 40)
-                              : null,
-                        ),
-
-
-                        const SizedBox(height: 10),
+                        
+                        const SizedBox(height: 50),
 
                         Text(
                           _displayName,
                           style: const TextStyle(
                             color: Colors.white,
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
+                            fontSize: 22,
+                            fontWeight: FontWeight.w700,
                           ),
                         ),
 
@@ -188,28 +207,35 @@ class _SelfProfileScreenState extends State<SelfProfileScreen>
                           style: const TextStyle(
                             color: Colors.white54,
                             fontSize: 14,
+                            letterSpacing: 0.5,
                           ),
                         ),
 
+                        const SizedBox(height: 20),
 
-                        const SizedBox(height: 16),
-
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            _statItem(postsCount.toString(), "Posts"),
-                            _divider(),
-                            _statItem(followersCount.toString(), "Followers"),
-                            _divider(),
-                            _statItem(followingCount.toString(), "Following"),
-                          ],
+                        // Stats Row
+                        Container(
+                          margin: const EdgeInsets.symmetric(horizontal: 20),
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.04),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: Colors.white.withOpacity(0.08)),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: [
+                              _statItem(followersCount.toString(), "Followers"),
+                              _divider(),
+                              _statItem(followingCount.toString(), "Following"),
+                              _divider(),
+                              _statItem(postsCount.toString(), "Posts"),
+                            ],
+                          ),
                         ),
-
 
                         const SizedBox(height: 16),
                       ],
-
-                      
                     ),
                   ),
 

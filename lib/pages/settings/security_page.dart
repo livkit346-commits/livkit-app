@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../services/auth_service.dart';
 import '../auth/forgot_password_page.dart';
 
 class SecurityPage extends StatefulWidget {
@@ -15,6 +16,8 @@ class _SecurityPageState extends State<SecurityPage>
   late Animation<Offset> _slideAnimation;
 
   // Security settings state
+  final AuthService _authService = AuthService();
+  bool _isLoading = true;
   bool _twoFactorAuth = false;
   bool _securityAlerts = true;
 
@@ -34,6 +37,46 @@ class _SecurityPageState extends State<SecurityPage>
     ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
 
     _controller.forward();
+    _loadSettings();
+  }
+
+  Future<void> _loadSettings() async {
+    final data = await _authService.fetchUserData();
+    if (data.containsKey("security_settings")) {
+      final s = data["security_settings"];
+      if (mounted) {
+        setState(() {
+          _twoFactorAuth = s["two_factor_auth"] ?? false;
+          _securityAlerts = s["security_alerts"] ?? true;
+          _isLoading = false;
+        });
+      }
+    } else {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _toggleSetting(String field, bool value) async {
+    setState(() {
+      if (field == "two_factor_auth") _twoFactorAuth = value;
+      if (field == "security_alerts") _securityAlerts = value;
+    });
+
+    final success = await _authService.updateSettings(
+      type: "security",
+      field: field,
+      value: value,
+    );
+
+    if (!success) {
+      setState(() {
+        if (field == "two_factor_auth") _twoFactorAuth = !value;
+        if (field == "security_alerts") _securityAlerts = !value;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Failed to update setting")),
+      );
+    }
   }
 
   @override
@@ -122,7 +165,9 @@ class _SecurityPageState extends State<SecurityPage>
         ),
       ),
       body: SafeArea(
-        child: FadeTransition(
+        child: _isLoading 
+        ? const Center(child: CircularProgressIndicator(color: Colors.white24))
+        : FadeTransition(
           opacity: _fadeAnimation,
           child: SlideTransition(
             position: _slideAnimation,
@@ -153,7 +198,7 @@ class _SecurityPageState extends State<SecurityPage>
                   "Two-Factor Authentication",
                   "Add an extra layer of security to your account",
                   _twoFactorAuth,
-                  (val) => setState(() => _twoFactorAuth = val),
+                  (val) => _toggleSetting("two_factor_auth", val),
                 ),
 
                 const SizedBox(height: 20),
@@ -183,7 +228,7 @@ class _SecurityPageState extends State<SecurityPage>
                   "Security Alerts",
                   "Receive alerts about suspicious activity",
                   _securityAlerts,
-                  (val) => setState(() => _securityAlerts = val),
+                  (val) => _toggleSetting("security_alerts", val),
                 ),
 
                 const SizedBox(height: 30),

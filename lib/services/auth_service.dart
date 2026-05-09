@@ -1,3 +1,5 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class AuthService {
@@ -29,9 +31,94 @@ class AuthService {
 
   bool get isAuthenticated => _client.auth.currentSession != null;
 
-  Future<Map<String, dynamic>> fetchUserData() async => {};
-  Future<void> updateProfile({required String displayName, required String bio, required String phone}) async {}
-  Future<void> uploadAvatar(String path) async {}
+  Future<Map<String, dynamic>> fetchUserData() async {
+    final token = await getAccessToken();
+    if (token == null) return {};
+
+    try {
+      final response = await http.get(
+        Uri.parse("https://livkit.onrender.com/api/accounts/me2/"),
+        headers: {
+          "Authorization": "Bearer $token",
+          "Content-Type": "application/json",
+        },
+      );
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body);
+      }
+    } catch (e) {
+      print("Error fetching user data from Django: $e");
+    }
+    return {};
+  }
+
+  Future<bool> updateSettings({required String type, required String field, required bool value}) async {
+    final token = await getAccessToken();
+    if (token == null) return false;
+
+    try {
+      final response = await http.post(
+        Uri.parse("https://livkit.onrender.com/api/accounts/settings/update/"),
+        headers: {
+          "Authorization": "Bearer $token",
+          "Content-Type": "application/json",
+        },
+        body: jsonEncode({
+          "type": type,
+          "field": field,
+          "value": value,
+        }),
+      );
+      return response.statusCode == 200;
+    } catch (e) {
+      print("Error updating settings: $e");
+      return false;
+    }
+  }
+
+  Future<bool> updateProfile({required String displayName, required String bio, required String phone}) async {
+    final token = await getAccessToken();
+    if (token == null) return false;
+
+    try {
+      final response = await http.put(
+        Uri.parse("https://livkit.onrender.com/api/accounts/profile/update/"),
+        headers: {
+          "Authorization": "Bearer $token",
+          "Content-Type": "application/json",
+        },
+        body: jsonEncode({
+          "display_name": displayName,
+          "bio": bio,
+          "phone": phone,
+        }),
+      );
+      return response.statusCode == 200;
+    } catch (e) {
+      print("Error updating profile: $e");
+      return false;
+    }
+  }
+
+  Future<bool> uploadAvatar(String path) async {
+    final token = await getAccessToken();
+    if (token == null) return false;
+
+    try {
+      var request = http.MultipartRequest(
+        'POST',
+        Uri.parse("https://livkit.onrender.com/api/accounts/profile/upload-avatar/"),
+      );
+      request.headers["Authorization"] = "Bearer $token";
+      request.files.add(await http.MultipartFile.fromPath('avatar', path));
+      
+      var response = await request.send();
+      return response.statusCode == 200;
+    } catch (e) {
+      print("Error uploading avatar: $e");
+      return false;
+    }
+  }
 
   Future<String?> getUserId() async {
     return _client.auth.currentUser?.id;

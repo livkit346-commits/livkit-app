@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../theme/app_colors.dart';
 import '../../services/streaming_service.dart';
 import 'streamer_page.dart';
 
@@ -50,9 +51,10 @@ class _GoLivePageState extends State<GoLivePage> {
 
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Failed to start live stream"),
+        SnackBar(
+          content: Text("Failed to start live stream: ${e.toString()}"),
           backgroundColor: Colors.red,
+          duration: const Duration(seconds: 5),
         ),
       );
     } finally {

@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import '../../theme/app_colors.dart';
 import 'package:http/http.dart' as http;
 import '../../services/auth_service.dart';
 
@@ -15,7 +16,10 @@ class _CoinWalletPageState extends State<CoinWalletPage> {
   String? _accessToken;
   bool _isLoading = true;
   List<dynamic> _packages = [];
-  int _balance = 0; // In a full prod app this would be fetched from a user/wallet endpoint
+  int _balance = 0;
+  String _usdBalance = "0.00";
+  String _earnings = "0.00";
+  List<dynamic> _transactions = [];
 
   @override
   void initState() {
@@ -26,9 +30,22 @@ class _CoinWalletPageState extends State<CoinWalletPage> {
   Future<void> _initData() async {
     _accessToken = await _authService.getAccessToken();
     if (_accessToken != null) {
+      final userData = await _authService.fetchUserData();
+      if (mounted) {
+        setState(() {
+          _usdBalance = userData["usd_balance"]?.toString() ?? "0.00";
+          _earnings = userData["withdrawable_balance"]?.toString() ?? "0.00";
+          _balance = userData["coin_balance"] is int 
+              ? userData["coin_balance"] 
+              : int.tryParse(userData["coin_balance"]?.toString() ?? "0") ?? 0;
+          _transactions = userData["transactions"] ?? [];
+        });
+      }
       await _fetchPackages();
     } else {
-      setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -89,73 +106,197 @@ class _CoinWalletPageState extends State<CoinWalletPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Colors.black, // Match web's pure black
       appBar: AppBar(
-        title: const Text("Coin Wallet", style: TextStyle(color: Colors.white)),
+        title: const Text("My Wallet", style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w700)),
         backgroundColor: Colors.transparent,
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.white),
       ),
-      body: Column(
-        children: [
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(24),
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [AppColors.primary, AppColors.secondary],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
+      body: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Balance Cards Grid
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+              child: Column(
+                children: [
+                  // USD Balance (Primary Card)
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFFFF0050), Color(0xFF7C0AFF)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFFFF0050).withOpacity(0.35),
+                          blurRadius: 24,
+                          offset: const Offset(0, 8),
+                        ),
+                      ],
+                    ),
+                    child: Stack(
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text("USD BALANCE", style: TextStyle(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.w600, letterSpacing: 0.5)),
+                            const SizedBox(height: 8),
+                            Text("\$$_usdBalance", style: const TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.w800)),
+                          ],
+                        ),
+                        const Positioned(
+                          right: 0,
+                          top: 0,
+                          child: Icon(Icons.account_balance_wallet, color: Colors.white24, size: 40),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  // Coins and Earnings Row
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Container(
+                          padding: const EdgeInsets.all(18),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.06),
+                            border: Border.all(color: Colors.white.withOpacity(0.08)),
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: Stack(
+                            children: [
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text("COINS", style: TextStyle(color: Colors.white54, fontSize: 12, fontWeight: FontWeight.w600, letterSpacing: 0.5)),
+                                  const SizedBox(height: 8),
+                                  Text("$_balance", style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.w800)),
+                                ],
+                              ),
+                              const Positioned(
+                                right: -4,
+                                top: -4,
+                                child: Icon(Icons.toll, color: Colors.white24, size: 36),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Container(
+                          padding: const EdgeInsets.all(18),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.06),
+                            border: Border.all(color: Colors.white.withOpacity(0.08)),
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: Stack(
+                            children: [
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text("EARNINGS", style: TextStyle(color: Colors.white54, fontSize: 12, fontWeight: FontWeight.w600, letterSpacing: 0.5)),
+                                  const SizedBox(height: 8),
+                                  Text("\$$_earnings", style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.w800)),
+                                ],
+                              ),
+                              const Positioned(
+                                right: -4,
+                                top: -4,
+                                child: Icon(Icons.trending_up, color: Colors.white24, size: 36),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
-            child: Column(
-              children: [
-                const Text("Current Balance", style: TextStyle(color: Colors.white, fontSize: 16)),
-                const SizedBox(height: 8),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(Icons.monetization_on, color: Colors.amber, size: 36),
-                    const SizedBox(width: 8),
-                    Text("$_balance", style: const TextStyle(color: Colors.white, fontSize: 36, fontWeight: FontWeight.bold)),
-                  ],
+            
+            const SizedBox(height: 24),
+            
+            // Transaction History Section
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 20),
+              child: Text(
+                "TRANSACTION HISTORY",
+                style: TextStyle(
+                  color: Colors.white54,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.5,
                 ),
-              ],
+              ),
             ),
-          ),
-          
-          Expanded(
-            child: _isLoading 
-              ? const Center(child: CircularProgressIndicator(color: Colors.redAccent))
-              : _packages.isEmpty 
-                  ? const Center(child: Text("No coin packages available.", style: TextStyle(color: Colors.white)))
-                  : ListView.builder(
-                      padding: const EdgeInsets.all(16),
-                      itemCount: _packages.length,
-                      itemBuilder: (context, index) {
-                        final pkg = _packages[index];
-                        return Card(
-                          color: AppColors.surface,
-                          margin: const EdgeInsets.only(bottom: 12),
-                          child: ListTile(
-                            leading: const Icon(Icons.monetization_on, color: Colors.amber, size: 32),
-                            title: Text("${pkg['coin_amount']} Coins", style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                            subtitle: Text("Buy for \$${pkg['usd_price']}", style: const TextStyle(color: Colors.white70)),
-                            trailing: ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: AppColors.primary,
-                                padding: const EdgeInsets.symmetric(horizontal: 24),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                              ),
-                              onPressed: () => _buyPackage(pkg['id']),
-                              child: const Text("Buy", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                            ),
-                          ),
-                        );
-                      },
+            
+            const SizedBox(height: 16),
+            
+            // Dynamic Transaction List or Empty State
+            _transactions.isEmpty 
+              ? Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 40),
+                  child: Center(
+                    child: Column(
+                      children: [
+                        Icon(Icons.receipt_long, color: Colors.white.withOpacity(0.3), size: 52),
+                        const SizedBox(height: 12),
+                        Text(
+                          "No transactions yet.\nRefer a friend to earn your first reward!",
+                          textAlign: TextAlign.center,
+                          style: TextStyle(color: Colors.white.withOpacity(0.3), fontSize: 14),
+                        ),
+                      ],
+                    ),
                   ),
-          ),
-        ],
+                )
+              : ListView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  itemCount: _transactions.length,
+                  itemBuilder: (context, index) {
+                    final tx = _transactions[index];
+                    final isWithdrawal = tx['type'] == 'withdrawal';
+                    return ListTile(
+                      leading: Icon(
+                        isWithdrawal ? Icons.arrow_outward : Icons.arrow_downward, 
+                        color: isWithdrawal ? Colors.redAccent : Colors.greenAccent
+                      ),
+                      title: Text(
+                        tx['description'] ?? 'Transaction', 
+                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600)
+                      ),
+                      subtitle: Text(
+                        tx['created_at']?.split('T')[0] ?? '', 
+                        style: const TextStyle(color: Colors.white54, fontSize: 12)
+                      ),
+                      trailing: Text(
+                        "${isWithdrawal ? '-' : '+'}\$${tx['amount_usd']}", 
+                        style: TextStyle(
+                          color: isWithdrawal ? Colors.redAccent : Colors.greenAccent, 
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16
+                        )
+                      ),
+                    );
+                  },
+                ),
+            
+            // Note: Package list to buy coins could be placed here or in a separate tab/modal
+            // depending on exact UX matching, but for now we perfectly replicate wallet.html
+          ],
+        ),
       ),
     );
   }
