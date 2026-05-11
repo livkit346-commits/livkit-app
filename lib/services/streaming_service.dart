@@ -1,9 +1,10 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import '../api_config.dart';
 import 'auth_service.dart';
 
 class StreamingService {
-  final String _baseUrl = 'https://livkit.onrender.com/api/streaming'; // Target Django backend
+  final String _baseUrl = '${ApiConfig.baseUrl}/streaming'; // Target Django backend
   final AuthService _auth = AuthService();
 
   /// HELPER: Get Auth Headers

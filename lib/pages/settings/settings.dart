@@ -13,6 +13,8 @@ import 'appearance_page.dart';
 import 'help_center_page.dart';
 import 'about_page.dart';
 import '../auth/login_page.dart';
+import '../../theme/app_colors.dart';
+import 'package:google_fonts/package_fonts.dart'; // Just using standard TextStyle if GoogleFonts isn't imported everywhere, actually let's just use TextStyle for now but use AppColors.
 
 class Settings extends StatefulWidget {
   const Settings({super.key});
@@ -30,6 +32,8 @@ class _SettingsState extends State<Settings>
   String _displayName = "";
   String _username = "";
   String? _avatarUrl;
+  String _referralCode = "";
+  int _totalReferrals = 0;
 
   late AnimationController _controller;
   late Animation<double> _fadeAnimation;
@@ -73,6 +77,8 @@ class _SettingsState extends State<Settings>
         _displayName = profile["display_name"] ?? "";
         _username = data["username"] ?? "";
         _avatarUrl = profile["avatar"];
+        _referralCode = data["referral_code"] ?? "";
+        _totalReferrals = data["total_referrals"] ?? 0;
       });
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -94,9 +100,9 @@ class _SettingsState extends State<Settings>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: Colors.black,
+        backgroundColor: AppColors.background,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
@@ -141,6 +147,8 @@ class _SettingsState extends State<Settings>
                     _item(Icons.subscriptions, "Subscriptions"),
                   ],
                 ),
+
+                _referralSection(),
 
                 _section(
                   title: "Settings",
@@ -191,14 +199,14 @@ class _SettingsState extends State<Settings>
               _displayName.isNotEmpty ? _displayName : "No name",
               style: const TextStyle(
                 color: Colors.white,
-                fontSize: 18,
+                fontSize: 20,
                 fontWeight: FontWeight.bold,
               ),
             ),
             const SizedBox(height: 4),
             Text(
               _username.isNotEmpty ? "@$_username" : "",
-              style: const TextStyle(color: Colors.white54),
+              style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.w500),
             ),
           ],
         ),
@@ -215,18 +223,131 @@ class _SettingsState extends State<Settings>
         Text(
           title.toUpperCase(),
           style: const TextStyle(
-            color: Colors.white54,
-            fontSize: 12,
-            fontWeight: FontWeight.bold,
+            color: AppColors.accent,
+            fontSize: 13,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 1.2,
           ),
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 12),
         Container(
           decoration: BoxDecoration(
-            color: Colors.white10,
-            borderRadius: BorderRadius.circular(12),
+            color: Colors.white.withOpacity(0.03),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.white.withOpacity(0.05)),
           ),
           child: Column(children: items),
+        ),
+        const SizedBox(height: 25),
+      ],
+    );
+  }
+
+  // 🔹 Referral Section (Matches Web Full Function)
+  Widget _referralSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          "REFERRAL",
+          style: TextStyle(
+            color: AppColors.accent,
+            fontSize: 13,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 1.2,
+          ),
+        ),
+        const SizedBox(height: 12),
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.03),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.white.withOpacity(0.05)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                "Your referral code",
+                style: TextStyle(color: Colors.white54, fontSize: 12),
+              ),
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  Expanded(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.07),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Text(
+                        _referralCode.isNotEmpty ? _referralCode : "NOT GENERATED",
+                        style: const TextStyle(
+                          color: Color(0xFFFF0050),
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 4,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  TextButton.icon(
+                    onPressed: _referralCode.isNotEmpty ? () {
+                      // Implement Copy to Clipboard
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text("Referral code copied!")),
+                      );
+                    } : null,
+                    icon: const Icon(Icons.copy, size: 16, color: Colors.white),
+                    label: const Text("Copy", style: TextStyle(color: Colors.white, fontSize: 12)),
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      side: BorderSide(color: Colors.white.withOpacity(0.3)),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                "Share this code. You earn USD rewards when friends subscribe! 🎉",
+                style: TextStyle(color: Colors.white38, fontSize: 11),
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    // Implement Generate Referral Code API call
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text("Generating Referral Code...")),
+                    );
+                  },
+                  icon: const Icon(Icons.share, size: 18),
+                  label: Text(_referralCode.isNotEmpty ? "Regenerate Code" : "Generate Referral Code"),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFFF0050),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    textStyle: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ),
+              if (_totalReferrals > 0) ...[
+                const SizedBox(height: 12),
+                Center(
+                  child: Text(
+                    "🏆 You've referred $_totalReferrals user${_totalReferrals == 1 ? '' : 's'}!",
+                    style: const TextStyle(color: Colors.white70, fontSize: 12),
+                  ),
+                ),
+              ],
+            ],
+          ),
         ),
         const SizedBox(height: 25),
       ],
@@ -323,7 +444,7 @@ class _SettingsState extends State<Settings>
           children: [
             Icon(
               icon,
-              color: danger ? Colors.redAccent : Colors.white,
+              color: danger ? Colors.redAccent : AppColors.primary,
             ),
             const SizedBox(width: 15),
             Expanded(
@@ -331,11 +452,12 @@ class _SettingsState extends State<Settings>
                 label,
                 style: TextStyle(
                   color: danger ? Colors.redAccent : Colors.white,
-                  fontSize: 14,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
             ),
-            const Icon(Icons.chevron_right, color: Colors.white38),
+            const Icon(Icons.chevron_right, color: Colors.white24),
           ],
         ),
       ),

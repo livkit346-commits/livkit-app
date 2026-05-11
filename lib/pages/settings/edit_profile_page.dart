@@ -27,6 +27,8 @@ class _EditProfilePageState extends State<EditProfilePage>
 
   File? _avatarFile;
   String? _avatarUrl;
+  File? _bannerFile;
+  String? _bannerUrl;
 
   bool _loading = false;
 
@@ -67,6 +69,7 @@ class _EditProfilePageState extends State<EditProfilePage>
       _bioController.text = profile["bio"] ?? "";
       _phoneController.text = profile["phone"] ?? "";
       _avatarUrl = profile["avatar"];
+      _bannerUrl = profile["banner_image"];
       _usernameController.text = data["username"] ?? "";
       _emailController.text = data["email"] ?? "";
 
@@ -91,11 +94,24 @@ class _EditProfilePageState extends State<EditProfilePage>
     }
   }
 
+  Future<void> _pickBanner() async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      setState(() {
+        _bannerFile = File(pickedFile.path);
+      });
+    }
+  }
+
   Future<void> _saveProfile() async {
     setState(() => _loading = true);
     try {
       if (_avatarFile != null) {
         await _authService.uploadAvatar(_avatarFile!.path);
+      }
+      if (_bannerFile != null) {
+        await _authService.uploadBanner(_bannerFile!.path);
       }
 
       await _authService.updateProfile(
@@ -151,41 +167,81 @@ class _EditProfilePageState extends State<EditProfilePage>
                     padding: const EdgeInsets.all(16),
                     children: [
                       Center(
-                        child: Stack(
+                        child: Column(
                           children: [
-                            CircleAvatar(
-                              radius: 50,
-                              backgroundColor: Colors.white24,
-                              backgroundImage: _avatarFile != null
-                                  ? FileImage(_avatarFile!)
-                                  : (_avatarUrl != null
-                                      ? NetworkImage(
-                                          _avatarUrl!,
-                                        ) as ImageProvider
-                                      : null),
-                              child: (_avatarFile == null && _avatarUrl == null)
-                                  ? const Icon(Icons.person,
-                                      size: 50, color: Colors.white)
-                                  : null,
-                            ),
-                            Positioned(
-                              bottom: 0,
-                              right: 0,
-                              child: InkWell(
-                                onTap: _pickAvatar,
-                                child: Container(
-                                  padding: const EdgeInsets.all(6),
-                                  decoration: const BoxDecoration(
-                                    color: Colors.blueAccent,
-                                    shape: BoxShape.circle,
+                            Stack(
+                              children: [
+                                Container(
+                                  height: 120,
+                                  width: double.infinity,
+                                  decoration: BoxDecoration(
+                                    color: Colors.white10,
+                                    borderRadius: BorderRadius.circular(16),
+                                    image: _bannerFile != null
+                                        ? DecorationImage(image: FileImage(_bannerFile!), fit: BoxFit.cover)
+                                        : (_bannerUrl != null
+                                            ? DecorationImage(image: NetworkImage(_bannerUrl!), fit: BoxFit.cover)
+                                            : null),
                                   ),
-                                  child: const Icon(
-                                    Icons.edit,
-                                    color: Colors.white,
-                                    size: 20,
+                                  child: (_bannerFile == null && _bannerUrl == null)
+                                      ? const Center(child: Icon(Icons.image, color: Colors.white24, size: 40))
+                                      : null,
+                                ),
+                                Positioned(
+                                  bottom: 8,
+                                  right: 8,
+                                  child: InkWell(
+                                    onTap: _pickBanner,
+                                    child: Container(
+                                      padding: const EdgeInsets.all(6),
+                                      decoration: const BoxDecoration(
+                                        color: Colors.blueAccent,
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: const Icon(Icons.camera_alt, color: Colors.white, size: 18),
+                                    ),
                                   ),
                                 ),
-                              ),
+                              ],
+                            ),
+                            const SizedBox(height: 20),
+                            Stack(
+                              children: [
+                                CircleAvatar(
+                                  radius: 50,
+                                  backgroundColor: Colors.white24,
+                                  backgroundImage: _avatarFile != null
+                                      ? FileImage(_avatarFile!)
+                                      : (_avatarUrl != null
+                                          ? NetworkImage(
+                                              _avatarUrl!,
+                                            ) as ImageProvider
+                                          : null),
+                                  child: (_avatarFile == null && _avatarUrl == null)
+                                      ? const Icon(Icons.person,
+                                          size: 50, color: Colors.white)
+                                      : null,
+                                ),
+                                Positioned(
+                                  bottom: 0,
+                                  right: 0,
+                                  child: InkWell(
+                                    onTap: _pickAvatar,
+                                    child: Container(
+                                      padding: const EdgeInsets.all(6),
+                                      decoration: const BoxDecoration(
+                                        color: Colors.blueAccent,
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: const Icon(
+                                        Icons.edit,
+                                        color: Colors.white,
+                                        size: 20,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                           ],
                         ),

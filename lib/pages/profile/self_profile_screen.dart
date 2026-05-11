@@ -38,7 +38,7 @@ class _SelfProfileScreenState extends State<SelfProfileScreen>
   void initState() {
     super.initState();
 
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 2, vsync: this);
 
     _animController = AnimationController(
       vsync: this,
@@ -68,8 +68,8 @@ class _SelfProfileScreenState extends State<SelfProfileScreen>
       final profile = data["profile"] ?? {};
 
       setState(() {
-        _username = data["username"] ?? "";
-        _displayName = profile["display_name"] ?? "";
+        _username = data["username"]?.isNotEmpty == true ? data["username"] : "User";
+        _displayName = profile["display_name"]?.isNotEmpty == true ? profile["display_name"] : "New User";
         _bio = profile["bio"] ?? "";
         _avatarUrl = profile["avatar"];
 
@@ -205,10 +205,49 @@ class _SelfProfileScreenState extends State<SelfProfileScreen>
                         Text(
                           "@$_username",
                           style: const TextStyle(
-                            color: Colors.white54,
-                            fontSize: 14,
+                            color: AppColors.primary,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w500,
                             letterSpacing: 0.5,
                           ),
+                        ),
+
+                        const SizedBox(height: 16),
+                        
+                        // Action Buttons (Edit Profile / Share)
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            ElevatedButton.icon(
+                              onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const Settings())),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.white10,
+                                foregroundColor: Colors.white,
+                                elevation: 0,
+                                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                              ),
+                              icon: const Icon(Icons.edit, size: 18),
+                              label: const Text("Edit Profile"),
+                            ),
+                            const SizedBox(width: 12),
+                            ElevatedButton.icon(
+                              onPressed: () {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text("Profile link copied!")),
+                                );
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.white10,
+                                foregroundColor: Colors.white,
+                                elevation: 0,
+                                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                              ),
+                              icon: const Icon(Icons.ios_share, size: 18),
+                              label: const Text("Share Profile"),
+                            ),
+                          ],
                         ),
 
                         const SizedBox(height: 20),
@@ -276,7 +315,6 @@ class _SelfProfileScreenState extends State<SelfProfileScreen>
                         unselectedLabelColor: Colors.white38,
                         tabs: const [
                           Tab(icon: Icon(Icons.grid_on)),
-                          Tab(icon: Icon(Icons.video_collection_outlined)),
                           Tab(icon: Icon(Icons.person_pin_outlined)),
                         ],
                       ),
@@ -307,34 +345,6 @@ class _SelfProfileScreenState extends State<SelfProfileScreen>
                         ),
                         child: const Icon(Icons.image,
                             color: Colors.white54),
-                      );
-                    },
-                  ),
-
-                  // 🎥 VIDEOS / LIVES
-                  ListView.builder(
-                    padding: const EdgeInsets.all(12),
-                    itemCount: 6,
-                    itemBuilder: (context, index) {
-                      return Container(
-                        margin: const EdgeInsets.only(bottom: 12),
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: Colors.grey.shade900,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Row(
-                          children: const [
-                            Icon(Icons.live_tv,
-                                color: Colors.redAccent),
-                            SizedBox(width: 12),
-                            Text(
-                              "Live stream replay",
-                              style:
-                                  TextStyle(color: Colors.white),
-                            ),
-                          ],
-                        ),
                       );
                     },
                   ),

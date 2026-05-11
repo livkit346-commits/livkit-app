@@ -267,27 +267,74 @@ class _CoinWalletPageState extends State<CoinWalletPage> {
                   itemCount: _transactions.length,
                   itemBuilder: (context, index) {
                     final tx = _transactions[index];
-                    final isWithdrawal = tx['type'] == 'withdrawal';
-                    return ListTile(
-                      leading: Icon(
-                        isWithdrawal ? Icons.arrow_outward : Icons.arrow_downward, 
-                        color: isWithdrawal ? Colors.redAccent : Colors.greenAccent
+                    final type = tx['type'] ?? 'other';
+                    final isDebit = type == 'withdrawal';
+                    
+                    Color iconBgColor = Colors.white.withOpacity(0.08);
+                    Color iconColor = Colors.white54;
+                    IconData iconData = Icons.receipt;
+
+                    if (type == 'referral_reward') {
+                      iconBgColor = const Color(0xFF4CAF50).withOpacity(0.15);
+                      iconColor = const Color(0xFF4CAF50);
+                      iconData = Icons.card_giftcard;
+                    } else if (type == 'subscription') {
+                      iconBgColor = const Color(0xFF7C4DFF).withOpacity(0.15);
+                      iconColor = const Color(0xFF7C4DFF);
+                      iconData = Icons.subscriptions;
+                    } else if (type == 'gift') {
+                      iconBgColor = const Color(0xFFFFC107).withOpacity(0.15);
+                      iconColor = const Color(0xFFFFC107);
+                      iconData = Icons.redeem;
+                    } else if (type == 'withdrawal') {
+                      iconBgColor = const Color(0xFFFF5722).withOpacity(0.15);
+                      iconColor = const Color(0xFFFF5722);
+                      iconData = Icons.money_off;
+                    }
+
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 4),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      decoration: BoxDecoration(
+                        border: Border(bottom: BorderSide(color: Colors.white.withOpacity(0.06))),
                       ),
-                      title: Text(
-                        tx['description'] ?? 'Transaction', 
-                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600)
-                      ),
-                      subtitle: Text(
-                        tx['created_at']?.split('T')[0] ?? '', 
-                        style: const TextStyle(color: Colors.white54, fontSize: 12)
-                      ),
-                      trailing: Text(
-                        "${isWithdrawal ? '-' : '+'}\$${tx['amount_usd']}", 
-                        style: TextStyle(
-                          color: isWithdrawal ? Colors.redAccent : Colors.greenAccent, 
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16
-                        )
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 44,
+                            height: 44,
+                            decoration: BoxDecoration(
+                              color: iconBgColor,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Icon(iconData, color: iconColor, size: 20),
+                          ),
+                          const SizedBox(width: 14),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  tx['description'] ?? 'Transaction',
+                                  style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w600),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  tx['created_at']?.split('T')[0] ?? '',
+                                  style: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 12),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Text(
+                            "${isDebit ? '-' : '+'}\$${tx['amount_usd']}",
+                            style: TextStyle(
+                              color: isDebit ? const Color(0xFFFF5722) : const Color(0xFF4CAF50),
+                              fontWeight: FontWeight.w800,
+                              fontSize: 15,
+                            ),
+                          ),
+                        ],
                       ),
                     );
                   },

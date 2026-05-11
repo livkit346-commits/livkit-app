@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../api_config.dart';
+
 class AuthService {
   final _client = Supabase.instance.client;
 
@@ -37,7 +39,7 @@ class AuthService {
 
     try {
       final response = await http.get(
-        Uri.parse("https://livkit.onrender.com/api/accounts/me2/"),
+        Uri.parse("${ApiConfig.baseUrl}/accounts/me2/"),
         headers: {
           "Authorization": "Bearer $token",
           "Content-Type": "application/json",
@@ -58,7 +60,7 @@ class AuthService {
 
     try {
       final response = await http.post(
-        Uri.parse("https://livkit.onrender.com/api/accounts/settings/update/"),
+        Uri.parse("${ApiConfig.baseUrl}/accounts/settings/update/"),
         headers: {
           "Authorization": "Bearer $token",
           "Content-Type": "application/json",
@@ -82,7 +84,7 @@ class AuthService {
 
     try {
       final response = await http.put(
-        Uri.parse("https://livkit.onrender.com/api/accounts/profile/update/"),
+        Uri.parse("${ApiConfig.baseUrl}/accounts/profile/update/"),
         headers: {
           "Authorization": "Bearer $token",
           "Content-Type": "application/json",
@@ -107,7 +109,7 @@ class AuthService {
     try {
       var request = http.MultipartRequest(
         'POST',
-        Uri.parse("https://livkit.onrender.com/api/accounts/profile/upload-avatar/"),
+        Uri.parse("${ApiConfig.baseUrl}/accounts/profile/upload-avatar/"),
       );
       request.headers["Authorization"] = "Bearer $token";
       request.files.add(await http.MultipartFile.fromPath('avatar', path));
@@ -116,6 +118,26 @@ class AuthService {
       return response.statusCode == 200;
     } catch (e) {
       print("Error uploading avatar: $e");
+      return false;
+    }
+  }
+
+  Future<bool> uploadBanner(String path) async {
+    final token = await getAccessToken();
+    if (token == null) return false;
+
+    try {
+      var request = http.MultipartRequest(
+        'POST',
+        Uri.parse("${ApiConfig.baseUrl}/accounts/profile/upload-banner/"),
+      );
+      request.headers["Authorization"] = "Bearer $token";
+      request.files.add(await http.MultipartFile.fromPath('banner', path));
+      
+      var response = await request.send();
+      return response.statusCode == 200;
+    } catch (e) {
+      print("Error uploading banner: $e");
       return false;
     }
   }
