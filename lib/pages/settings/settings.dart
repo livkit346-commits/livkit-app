@@ -14,7 +14,7 @@ import 'help_center_page.dart';
 import 'about_page.dart';
 import '../auth/login_page.dart';
 import '../../theme/app_colors.dart';
-import 'package:google_fonts/package_fonts.dart'; // Just using standard TextStyle if GoogleFonts isn't imported everywhere, actually let's just use TextStyle for now but use AppColors.
+// Settings Page with Web Parity
 
 class Settings extends StatefulWidget {
   const Settings({super.key});

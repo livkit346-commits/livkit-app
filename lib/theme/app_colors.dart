@@ -14,6 +14,7 @@ class AppColors {
   static const Color primary = Color(0xFF7C4DFF); // Purple
   static const Color secondary = Color(0xFF4568DC); // Blue
   static const Color surface = Color(0xFF1A1A1A);
+  static const Color accent = Color(0xFFFF0050); // Pinkish red
   
   // ⚪ Text
   static const Color textPrimary = Colors.white;
